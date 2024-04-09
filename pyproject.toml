@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "huberman-rag"
+version = "0.1.0"
+description = "A Huberman podcast RAG pipeline."
+authors = ["DamirBogdan39 <damirbogdan39@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+langchain = "^0.1.14"
+youtube-transcript-api = "^0.6.2"
+pytube = "^15.0.0"
+transformers = "^4.39.3"
+torch = "^2.2.2"
+bs4 = "^0.0.2"
+requests = "^2.31.0"
+ragas = "^0.1.6"
+sentence-transformers = "^2.6.1"
+
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.29.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

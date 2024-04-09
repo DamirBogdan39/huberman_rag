@@ -1,0 +1,20 @@
+# Python compiled files 
+__pycache__
+*.py[cod]
+*$py.class
+*.pymon
+*/__pycache__
+
+# Environment variables
+.env
+.envs/*
+venv/
+
+# Vscode
+.vscode
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# Local History for Visual Studio Code
+.history/
