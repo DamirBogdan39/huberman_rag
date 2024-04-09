@@ -28,4 +28,4 @@ def embed_splade(text: str) -> torch.Tensor:
         ) * tokens.attention_mask.unsqueeze(-1),
         dim=1)[0].squeeze()
 
-    return vec
+    return vec.detach().tolist()
