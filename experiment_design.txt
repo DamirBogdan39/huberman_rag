@@ -1,3 +1,5 @@
+text extraction - whisper: https://www.youtube.com/watch?v=U2TqRKjw1-k
+
 multi-vector search: https://milvus.io/docs/multi-vector-search.md
 
 vectors: SPLADE (https://www.youtube.com/watch?v=a3-RM_u5YoU) + BGE embeddings (https://www.youtube.com/watch?v=sWRvSG7vL4g):
