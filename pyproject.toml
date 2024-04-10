@@ -19,6 +19,8 @@ sentence-transformers = "^2.6.1"
 pymilvus = "^2.4.0"
 yt-dlp = "^2024.4.9"
 pydub = "^0.25.1"
+accelerate = "^0.29.2"
+datasets = {extras = ["audio"], version = "^2.18.0"}
 
 
 [tool.poetry.group.dev.dependencies]

@@ -21,3 +21,5 @@ venv/
 
 # Compose volume
 compose/volumes
+
+docs/youtube/*.m4a
