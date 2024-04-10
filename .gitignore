@@ -22,4 +22,5 @@ venv/
 # Compose volume
 compose/volumes
 
+# Exclude .m4a files - too large
 docs/youtube/*.m4a
