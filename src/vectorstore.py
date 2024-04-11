@@ -1,6 +1,6 @@
 from langchain.schema.document import Document
 from src.splade_embeddings import embed_splade
-from src.bge_embeddigns import bge_embeddings
+from src.bge_embeddigns import embed_bge
 from pymilvus import (
     connections,
     FieldSchema,
@@ -96,7 +96,7 @@ def jsonize_document(doc: Document) -> dict:
     # author = doc.metadata["author"]
 
     splade_emb = embed_splade(page_content)
-    bge_emb = bge_embeddings.embed_query(page_content)
+    bge_emb = embed_bge(page_content)
 
     json_doc = {
         "page_content": page_content,
