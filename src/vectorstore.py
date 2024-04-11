@@ -7,7 +7,9 @@ from pymilvus import (
     CollectionSchema,
     DataType,
     Collection,
-    MilvusClient
+    MilvusClient,
+    AnnSearchRequest,
+    WeightedRanker
 )
 
 
@@ -35,23 +37,10 @@ def create_collection():
         name="splade_embeddings", dtype=DataType.FLOAT_VECTOR, dim=30522)
     page_content = FieldSchema(
         name="page_content", dtype=DataType.VARCHAR, max_length=3000)
-    # source = FieldSchema(name="source", dtype=DataType.VARCHAR, max_length=500)
-    # title = FieldSchema(name="title", dtype=DataType.VARCHAR, max_length=500)
-    # description = FieldSchema(
-    #     name="description", dtype=DataType.VARCHAR, max_length=500)
-    # view_count = FieldSchema(name="view_count", dtype=DataType.INT64)
-    # thumbnail_url = FieldSchema(
-    #     name="thumbnail_url", dtype=DataType.VARCHAR, max_length=500)
-    # publish_date = FieldSchema(
-    #     name="publish_date", dtype=DataType.VARCHAR, max_length=500)
-    # length = FieldSchema(name="length", dtype=DataType.VARCHAR, max_length=500)
-    # author = FieldSchema(name="author", dtype=DataType.VARCHAR, max_length=500)
 
     # Define collection schema
     schema = CollectionSchema(
         fields=[pk, bge_embeddings, splade_embeddings, page_content])
-    #   source, title, description,
-    #   view_count, thumbnail_url, publish_date, length, author])
 
     # Create collection
     collection_name = "huberman_rag"
@@ -86,29 +75,56 @@ def create_collection():
 
 def jsonize_document(doc: Document) -> dict:
     page_content = doc.page_content
-    # source = doc.metadata["source"]
-    # title = doc.metadata["title"]
-    # description = doc.metadata["description"]
-    # view_count = doc.metadata["view_count"]
-    # thumbnail_url = doc.metadata["thumbnail_url"]
-    # publish_date = doc.metadata["publish_date"]
-    # length = doc.metadata["length"]
-    # author = doc.metadata["author"]
-
     splade_emb = embed_splade(page_content)
     bge_emb = embed_bge(page_content)
 
     json_doc = {
         "page_content": page_content,
-        # "source": source,
-        # "title": title,
-        # "description": description,
-        # "view_count": view_count,
-        # "thumbnail_url": thumbnail_url,
-        # "publish_date": publish_date,
-        # "length": length,
-        # "author": author,
         "splade_embeddings": splade_emb,
         "bge_embeddings": bge_emb
     }
     return json_doc
+
+
+def connect_to_milvus():
+    host = "127.0.0.1"  # Milvus server host
+    port = "19530"  # Milvus server port
+
+    # Connect to Milvus server
+    connections.connect(host=host, port=port)
+
+
+def activate_collection():
+    collection = Collection(name="huberman_rag")
+    return collection
+
+
+def multivector_query(query: str, collection: Collection = activate_collection()) -> str:
+
+    bge = embed_bge(query)
+    splade = embed_splade(query)
+
+    res = collection.hybrid_search(
+        reqs=[
+            AnnSearchRequest(
+                data=[bge],  # Replace with your text vector data
+                anns_field='bge_embeddings',  # Textual data vector field
+                param={"metric_type": "IP",
+                       "params": {"nprobe": 10}},  # Search parameters
+                limit=5
+            ),
+            AnnSearchRequest(
+                data=[splade],  # Replace with your image vector data
+                anns_field='splade_embeddings',  # Image data vector field
+                param={"metric_type": "IP", "params": {
+                    "nprobe": 10}},  # Search parameters
+                limit=5
+            )
+        ],
+        rerank=WeightedRanker(0.8, 0.2),
+
+        limit=10,
+        output_fields=["pk", "page_content"],
+    )
+
+    return res
