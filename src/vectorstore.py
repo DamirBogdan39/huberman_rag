@@ -99,11 +99,12 @@ def activate_collection():
     return collection
 
 
-def multivector_query(query: str, collection: Collection = activate_collection()) -> str:
+def multivector_query(query: str) -> str:
 
     bge = embed_bge(query)
     splade = embed_splade(query)
-
+    collection = activate_collection()
+    collection.load()
     res = collection.hybrid_search(
         reqs=[
             AnnSearchRequest(

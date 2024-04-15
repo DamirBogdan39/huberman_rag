@@ -28,3 +28,5 @@ docs/youtube/*.m4a
 # DS_store for mac
 .DS_store
 */.DS_store
+
+dataframe.csv
