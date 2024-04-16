@@ -100,7 +100,9 @@ def activate_collection():
 
 
 def multivector_query(query: str) -> str:
+    """
 
+    """
     bge = embed_bge(query)
     splade = embed_splade(query)
     collection = activate_collection()
@@ -108,24 +110,43 @@ def multivector_query(query: str) -> str:
     res = collection.hybrid_search(
         reqs=[
             AnnSearchRequest(
-                data=[bge],  # Replace with your text vector data
-                anns_field='bge_embeddings',  # Textual data vector field
+                data=[bge],
+                anns_field="bge_embeddings",
                 param={"metric_type": "IP",
-                       "params": {"nprobe": 10}},  # Search parameters
+                       "params": {"nprobe": 10}},
                 limit=5
             ),
             AnnSearchRequest(
-                data=[splade],  # Replace with your image vector data
-                anns_field='splade_embeddings',  # Image data vector field
-                param={"metric_type": "IP", "params": {
-                    "nprobe": 10}},  # Search parameters
+                data=[splade],
+                anns_field="splade_embeddings",
+                param={"metric_type": "IP",
+                       "params": {"nprobe": 10}},
                 limit=5
             )
         ],
         rerank=WeightedRanker(0.8, 0.2),
 
         limit=10,
-        output_fields=["pk", "page_content"],
+        output_fields=["page_content"],
+    )
+
+    return res
+
+
+def rerank_query(query: str) -> str:
+    """
+
+    """
+    bge = embed_bge(query)
+    collection = activate_collection()
+    collection.load()
+    res = collection.search(
+        data=[bge],
+        anns_field="bge_embeddings",
+        param={"metric_type": "IP",
+               "params": {"nprobe": 10}},
+        limit=100,
+        output_fields=["page_content"]
     )
 
     return res
