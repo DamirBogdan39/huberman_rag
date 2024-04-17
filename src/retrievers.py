@@ -28,5 +28,4 @@ class MilvusRerankRetriever(BaseRetriever):
 
         connect_to_milvus()
         res = rerank_query(query)
-
-        return [[Document(page_content=i.page_content) for i in res[0]]]
+        return res

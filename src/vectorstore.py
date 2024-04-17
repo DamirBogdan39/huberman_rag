@@ -11,6 +11,13 @@ from pymilvus import (
     AnnSearchRequest,
     WeightedRanker
 )
+import cohere
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 
 
 def create_collection():
@@ -140,7 +147,7 @@ def rerank_query(query: str) -> str:
     bge = embed_bge(query)
     collection = activate_collection()
     collection.load()
-    res = collection.search(
+    unranked_results = collection.search(
         data=[bge],
         anns_field="bge_embeddings",
         param={"metric_type": "IP",
@@ -149,4 +156,14 @@ def rerank_query(query: str) -> str:
         output_fields=["page_content"]
     )
 
-    return res
+    docs_dict = {i: doc for i, doc in enumerate(unranked_results[0])}
+    co = cohere.Client(COHERE_API_KEY)
+    reranked_docs = co.rerank(query=query,
+                              documents=[
+                                  doc.page_content for doc in docs_dict.values()],
+                              top_n=10,
+                              model="rerank-english-v2.0")
+    indices = [response.index for response in reranked_docs.results]
+    reranked_docs = [Document(unranked_results[0][i].page_content)
+                     for i in indices]
+    return reranked_docs
