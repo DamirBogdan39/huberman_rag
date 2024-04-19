@@ -16,13 +16,14 @@ bs4 = "^0.0.2"
 requests = "^2.31.0"
 ragas = "^0.1.6"
 sentence-transformers = "^2.6.1"
-pymilvus = "^2.4.0"
+pymilvus = {extras = ["model"], version = "^2.4.0"}
 yt-dlp = "^2024.4.9"
 pydub = "^0.25.1"
 accelerate = "^0.29.2"
 datasets = {extras = ["audio"], version = "^2.18.0"}
 unstructured = "^0.13.2"
 cohere = "^5.2.6"
+scipy = "^1.13.0"
 
 
 [tool.poetry.group.dev.dependencies]
