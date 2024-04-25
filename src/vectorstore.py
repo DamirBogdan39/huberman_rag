@@ -1,6 +1,7 @@
 from langchain.schema.document import Document
 from src.splade_embeddings import embed_splade
 from src.bge_embeddigns import embed_bge
+from src.bgem3_embeddings import embed_bgem3
 from pymilvus import (
     connections,
     FieldSchema,
@@ -26,57 +27,25 @@ def create_collection():
     Connects to milvus and creates fields, collection and indicies for vector field.
     """
     print("Creating collection...")
-    client = MilvusClient(
-        uri="http://localhost:19530"
-    )
-    # Specify Milvus server parameters
-    host = "127.0.0.1"  # Milvus server host
-    port = "19530"  # Milvus server port
+    connections.connect("default", host="localhost", port="19530")
 
-    # Connect to Milvus server
-    connections.connect(host=host, port=port)
-    # Define field schemas
-    pk = FieldSchema(name="pk", dtype=DataType.INT64,
-                     is_primary=True, auto_id=False)
-    bge_embeddings = FieldSchema(
-        name="bge_embeddings", dtype=DataType.FLOAT_VECTOR, dim=1024)
-    splade_embeddings = FieldSchema(
-        name="splade_embeddings", dtype=DataType.FLOAT_VECTOR, dim=30522)
-    page_content = FieldSchema(
-        name="page_content", dtype=DataType.VARCHAR, max_length=3000)
+    fields = [
+        FieldSchema(name="pk", dtype=DataType.VARCHAR,
+                    is_primary=True, auto_id=True, max_length=100),
+        FieldSchema(name="page_content", dtype=DataType.VARCHAR, max_length=3000),
+        FieldSchema(name="sparse_vector", dtype=DataType.SPARSE_FLOAT_VECTOR),
+        FieldSchema(name="dense_vector", dtype=DataType.FLOAT_VECTOR, dim=1024),
+    ]
 
-    # Define collection schema
-    schema = CollectionSchema(
-        fields=[pk, bge_embeddings, splade_embeddings, page_content])
+    schema= CollectionSchema(fields, "")
 
-    # Create collection
-    collection_name = "huberman_rag"
-    collection = Collection(name=collection_name, schema=schema,)
+    col = Collection("huberman_rag", schema)
 
-    index_params = MilvusClient.prepare_index_params()
+    sparse_index = {"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "IP", "efConstruction": 500, "M": 2048}
+    dense_index = {"index_type": "HNSW", "metric_type": "IP", "efConstruction": 500, "M": 2048}
 
-    index_params.add_index(
-        field_name="bge_embeddings",
-        metric_type="IP",
-        index_type="HNSW",
-        index_name="bge_embeddings_index",
-        efConstruction=500,
-        M=2048
-    )
-
-    index_params.add_index(
-        field_name="splade_embeddings",
-        metric_type="IP",
-        index_type="HNSW",
-        index_name="splade_embeddings_index",
-        efConstruction=500,
-        M=2048
-    )
-
-    client.create_index(
-        collection_name="huberman_rag",
-        index_params=index_params
-    )
+    col.create_index("sparse_vector", sparse_index)
+    col.create_index("dense_vector", dense_index)
     print("Collection created successfully.")
 
 
@@ -110,22 +79,22 @@ def multivector_query(query: str) -> str:
     """
 
     """
-    bge = embed_bge(query)
-    splade = embed_splade(query)
+    dense_embeddings = embed_bge(query)
+    sparse_embeddings = embed_splade(query)
     collection = activate_collection()
     collection.load()
     res = collection.hybrid_search(
         reqs=[
             AnnSearchRequest(
-                data=[bge],
-                anns_field="bge_embeddings",
+                data=[dense_embeddings],
+                anns_field="dense_vector",
                 param={"metric_type": "IP",
                        "params": {"nprobe": 10}},
                 limit=5
             ),
             AnnSearchRequest(
-                data=[splade],
-                anns_field="splade_embeddings",
+                data=sparse_embeddings,
+                anns_field="sparse_vector",
                 param={"metric_type": "IP",
                        "params": {"nprobe": 10}},
                 limit=5
@@ -144,12 +113,12 @@ def rerank_query(query: str) -> str:
     """
 
     """
-    bge = embed_bge(query)
+    dense_embeddings = embed_bge(query)
     collection = activate_collection()
     collection.load()
     unranked_results = collection.search(
-        data=[bge],
-        anns_field="bge_embeddings",
+        data=[dense_embeddings],
+        anns_field="dense_vector",
         param={"metric_type": "IP",
                "params": {"nprobe": 10}},
         limit=100,
