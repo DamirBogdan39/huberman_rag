@@ -10,7 +10,8 @@ from pymilvus import (
     Collection,
     MilvusClient,
     AnnSearchRequest,
-    WeightedRanker
+    WeightedRanker,
+    Milvus
 )
 import cohere
 from dotenv import load_dotenv
@@ -25,28 +26,38 @@ def create_collection():
     """
     A function that creates the collection. 
     Connects to milvus and creates fields, collection and indicies for vector field.
+    If collection already exists it prints that the collections exists.
     """
-    print("Creating collection...")
-    connections.connect("default", host="localhost", port="19530")
+ 
+    milvus = Milvus(host='localhost', port='19530')
 
-    fields = [
-        FieldSchema(name="pk", dtype=DataType.VARCHAR,
-                    is_primary=True, auto_id=True, max_length=100),
-        FieldSchema(name="page_content", dtype=DataType.VARCHAR, max_length=3000),
-        FieldSchema(name="sparse_vector", dtype=DataType.SPARSE_FLOAT_VECTOR),
-        FieldSchema(name="dense_vector", dtype=DataType.FLOAT_VECTOR, dim=1024),
-    ]
+    collection_name = 'huberman_rag' # Put your collection name here
 
-    schema= CollectionSchema(fields, "")
+    # Check if the collection exists
+    if milvus.has_collection(collection_name):
+        print("Collection already exists.")
+    else:
+        print("Creating collection...")
+        connections.connect("default", host="localhost", port="19530")
 
-    col = Collection("huberman_rag", schema)
+        fields = [
+            FieldSchema(name="pk", dtype=DataType.VARCHAR,
+                        is_primary=True, auto_id=True, max_length=100),
+            FieldSchema(name="page_content", dtype=DataType.VARCHAR, max_length=3000),
+            FieldSchema(name="sparse_vector", dtype=DataType.SPARSE_FLOAT_VECTOR),
+            FieldSchema(name="dense_vector", dtype=DataType.FLOAT_VECTOR, dim=1024),
+        ]
 
-    sparse_index = {"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "IP", "efConstruction": 500, "M": 2048}
-    dense_index = {"index_type": "HNSW", "metric_type": "IP", "efConstruction": 500, "M": 2048}
+        schema= CollectionSchema(fields, "")
 
-    col.create_index("sparse_vector", sparse_index)
-    col.create_index("dense_vector", dense_index)
-    print("Collection created successfully.")
+        col = Collection("huberman_rag", schema)
+
+        sparse_index = {"index_type": "SPARSE_INVERTED_INDEX", "metric_type": "IP", "efConstruction": 500, "M": 2048}
+        dense_index = {"index_type": "HNSW", "metric_type": "IP", "efConstruction": 500, "M": 2048}
+
+        col.create_index("sparse_vector", sparse_index)
+        col.create_index("dense_vector", dense_index)
+        print("Collection created successfully.")
 
 
 def jsonize_document(doc: Document) -> dict:
@@ -71,6 +82,7 @@ def connect_to_milvus():
 
 
 def activate_collection():
+    connect_to_milvus()
     collection = Collection(name="huberman_rag")
     return collection
 
