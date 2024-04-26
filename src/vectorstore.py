@@ -2,6 +2,7 @@ from langchain.schema.document import Document
 from src.splade_embeddings import embed_splade
 from src.bge_embeddigns import embed_bge
 from src.bgem3_embeddings import embed_bgem3
+from src.hyde_embeddings import hyde_embeddings
 from pymilvus import (
     connections,
     FieldSchema,
@@ -16,6 +17,7 @@ from pymilvus import (
 import cohere
 from dotenv import load_dotenv
 import os
+from typing import List
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -60,19 +62,6 @@ def create_collection():
         print("Collection created successfully.")
 
 
-def jsonize_document(doc: Document) -> dict:
-    page_content = doc.page_content
-    splade_emb = embed_splade(page_content)
-    bge_emb = embed_bge(page_content)
-
-    json_doc = {
-        "page_content": page_content,
-        "splade_embeddings": splade_emb,
-        "bge_embeddings": bge_emb
-    }
-    return json_doc
-
-
 def connect_to_milvus():
     host = "127.0.0.1"  # Milvus server host
     port = "19530"  # Milvus server port
@@ -87,7 +76,7 @@ def activate_collection():
     return collection
 
 
-def multivector_query(query: str) -> str:
+def multivector_query(query: str) -> List[Document]:
     """
 
     """
@@ -121,7 +110,7 @@ def multivector_query(query: str) -> str:
     return res
 
 
-def rerank_query(query: str) -> str:
+def rerank_query(query: str) -> List[Document]:
     """
 
     """
@@ -148,3 +137,23 @@ def rerank_query(query: str) -> str:
     reranked_docs = [Document(unranked_results[0][i].page_content)
                      for i in indices]
     return reranked_docs
+
+def hyde_query(query: str) -> List[Document]:
+    """
+    
+    """
+    hyde_emb = hyde_embeddings.embed_query(query)
+    client = MilvusClient(uri="http://localhost:19530")
+    
+
+    res = client.search(
+        collection_name="huberman_rag",
+        data=[hyde_emb],
+        anns_field="dense_vector",
+        limit=10,
+        search_params={"metric_type":"IP",
+                       "params": {"nprobe": 10}},
+        output_fields=["page_content"]
+    )
+
+    return res
