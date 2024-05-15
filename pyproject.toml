@@ -4,6 +4,10 @@ version = "0.1.0"
 description = "A Huberman podcast RAG pipeline."
 authors = ["DamirBogdan39 <damirbogdan39@gmail.com>"]
 readme = "README.md"
+packages = [
+    { include = "src"}
+]
+
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
@@ -24,6 +28,7 @@ datasets = {extras = ["audio"], version = "^2.18.0"}
 unstructured = "^0.13.2"
 cohere = "^5.2.6"
 scipy = "^1.13.0"
+langchain-experimental = "^0.0.58"
 
 
 [tool.poetry.group.dev.dependencies]
