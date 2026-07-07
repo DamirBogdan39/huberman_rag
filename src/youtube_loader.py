@@ -1,5 +1,5 @@
+from langchain_core.documents import Document
 from langchain_community.document_loaders import YoutubeLoader
-from langchain.schema.document import Document
 
 
 def load_from_youtube(url: str) -> Document:

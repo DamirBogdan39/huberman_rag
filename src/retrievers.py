@@ -1,17 +1,17 @@
-from src.vectorstore import connect_to_milvus, multivector_query, rerank_query
+from typing import List
 
-from langchain_core.retrievers import BaseRetriever
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.documents import Document
-from typing import List
+from langchain_core.retrievers import BaseRetriever
+
+from src.vectorstore import connect_to_milvus, multivector_query, rerank_query
 
 
 class MilvusMultiVectorRetriever(BaseRetriever):
 
-    def _get_relevant_documents(self,
-                                query: str,
-                                *,
-                                run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
 
         connect_to_milvus()
         res = multivector_query(query)
@@ -21,10 +21,9 @@ class MilvusMultiVectorRetriever(BaseRetriever):
 
 class MilvusRerankRetriever(BaseRetriever):
 
-    def _get_relevant_documents(self,
-                                query: str,
-                                *,
-                                run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
 
         connect_to_milvus()
         res = rerank_query(query)

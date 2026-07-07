@@ -1,9 +1,11 @@
 from pymilvus.model.hybrid import BGEM3EmbeddingFunction
+
 from src.device import get_device
 
 ef = BGEM3EmbeddingFunction(use_fp16=False, device=get_device())
 
-def embed_bgem3(text:str):
+
+def embed_bgem3(text: str):
     """
     A function to get the sparse and dense embeddigns from BGEM3EmbeddingFunction.
 
@@ -17,7 +19,7 @@ def embed_bgem3(text:str):
     dense_emb: List[float]
         A dense embedding vector of the text.
 
-    sparse_emb: 
+    sparse_emb:
         A sparse embedding vector of the text.
     """
     embeddings = ef([text])

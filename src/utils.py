@@ -1,7 +1,10 @@
-import re
-from langchain_core.documents import Document
-from typing import List
 import pickle
+import re
+from typing import List
+
+from langchain_core.documents import Document
+
+
 def reformat_text(text: str) -> str:
     """
     Reformats the the text to remove newline if any character except . is before the newline

@@ -3,8 +3,9 @@ from transformers import AutoModelForMaskedLM, AutoTokenizer
 from typing import List
 from scipy import sparse
 import numpy as np
+from config.models import models
 
-model_id = 'naver/splade-cocondenser-ensembledistil'
+model_id = models.splade
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForMaskedLM.from_pretrained(model_id)
 

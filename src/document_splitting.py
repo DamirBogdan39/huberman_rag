@@ -1,5 +1,5 @@
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain.schema.document import Document
 
 text_splitter = RecursiveCharacterTextSplitter(
     chunk_size=2000,
